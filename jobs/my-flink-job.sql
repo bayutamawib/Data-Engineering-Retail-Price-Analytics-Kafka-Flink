@@ -2,7 +2,7 @@ CREATE CATALOG test_pg WITH (
   'type' = 'jdbc',
   'default-database' = 'dna_project',
   'username' = 'dna_project_owner',
-  'password' = 'npg_3KULjo5SaevN',
+  'password' = '*******',
   'base-url' = 'jdbc:postgresql://ep-orange-star-a10mj9ay.ap-southeast-1.aws.neon.tech:5432'
 );
 
