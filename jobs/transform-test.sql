@@ -32,7 +32,7 @@ CREATE TABLE `product_price_avg` (
   'url' = 'jdbc:postgresql://ep-orange-star-a10mj9ay.ap-southeast-1.aws.neon.tech:5432/dna_project?sslmode=require',
   'table-name' = 'fact.product_price_avg',
   'username' = 'dna_project_owner',
-  'password' = 'npg_3KULjo5SaevN',
+  'password' = '*******',
   'driver' = 'org.postgresql.Driver',
   'sink.buffer-flush.max-rows' = '1',
   'sink.buffer-flush.interval' = '2s'
