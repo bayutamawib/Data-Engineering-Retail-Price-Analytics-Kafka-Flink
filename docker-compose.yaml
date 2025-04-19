@@ -1,0 +1,201 @@
+version: "3.3"
+networks:
+  default:
+    name: flink-network
+
+services:
+  kafka-1:
+    image: apache/kafka:4.0.0
+    hostname: kafka-1
+    container_name: kafka-1
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:19092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://kafka-1:19092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: '4L6g3nShT-eMCtK--X86sw'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 1
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_JMX_PORT: 9997
+    volumes:
+      - ./kafka-1-data:/var/lib/kafka/data
+
+  kafka-2:
+    image: apache/kafka:4.0.0
+    hostname: kafka-2
+    container_name: kafka-2
+    ports:
+      - 29092:9092
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://kafka-2:29092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: '4L6g3nShT-eMCtK--X86sw'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 1
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_JMX_PORT: 9998
+    volumes:
+      - ./kafka-2-data:/var/lib/kafka/data
+
+  kafka-3:
+    image: apache/kafka:4.0.0
+    hostname: kafka-3
+    container_name: kafka-3
+    ports:
+      - 39092:9092
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:39092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://kafka-3:39092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: '4L6g3nShT-eMCtK--X86sw'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 1
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_JMX_PORT: 9999
+    volumes:
+      - ./kafka-3-data:/var/lib/kafka/data
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.8.2
+    container_name: schema-registry
+    hostname: schema-registry
+    ports:
+      - 8081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-1:9092,kafka-2:9092,kafka-3:9092'
+      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081'
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: kraft-labs
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 'kafka-1:9092,kafka-2:9092,kafka-3:9092'
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9997
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: 'http://schema-registry:8081'
+      KAFKA_UI_CONNECT_CLUSTERS_0_KAFKA_CONNECT: http://localhost:8083
+
+  kafka-connect:
+    build:
+      context: .
+      dockerfile: Dockerfile.kafka-connect
+    container_name: kafka-connect
+    hostname: kafka-connect
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+      - schema-registry
+    ports:
+      - 8083:8083
+      - 8888:8888
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'kafka-1:9092,kafka-2:9092,kafka-3:9092'
+      CONNECT_REST_PORT: 8083
+      KAFKA_DEBUG: 'true'
+      JAVA_DEBUG_PORT: '*:8888'
+      CONNECT_GROUP_ID: connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-avro-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-avro-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-avro-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
+      CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONNECT_LISTENERS: "http://0.0.0.0:8083"
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_REST_ADVERTISED_HOST_NAME: 'localhost'
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/etc/kafka-connect/jars,/usr/local/share/kafka/plugins,/usr/share/filestream-connectors'
+    volumes:
+      - ./jars:/etc/kafka-connect/jars
+      - ./data:/kafka-connect/data
+
+  flink-jobmanager:
+    build:
+      context: .
+      dockerfile: Dockerfile.flink
+    container_name: flink-jobmanager
+    command: jobmanager
+    ports:
+      - "8082:8081"
+    volumes:
+      - ./jobs:/opt/flink/jobs
+      - ./flink-conf:/opt/flink/conf
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 2
+      - JOBMANAGER_HOST=flink-jobmanager
+      - FLINK_ROLE=jobmanager
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+
+  flink-taskmanager:
+    build:
+      context: .
+      dockerfile: Dockerfile.flink
+    command: taskmanager
+    depends_on:
+      - flink-jobmanager
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    volumes:
+      - ./flink-conf:/opt/flink/conf
+    scale: 2
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+      - FLINK_ROLE=taskmanager

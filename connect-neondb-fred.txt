@@ -1,0 +1,1 @@
+jdbc:postgresql://ep-aged-sound-044942-pooler.ap-southeast-1.aws.neon.tech/neondb?user=frederik.anugrah&password=QFLTpCZ51mJr&sslmode=require

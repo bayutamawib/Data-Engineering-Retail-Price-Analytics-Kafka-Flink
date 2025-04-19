@@ -1,0 +1,9 @@
+jobmanager.rpc.address: flink-jobmanager
+rest.port: 8081  # Keep this as internal container port
+rest.address: 0.0.0.0
+
+# JobManager memory config
+jobmanager.memory.process.size: 1600m
+
+# TaskManager memory config
+taskmanager.memory.process.size: 1728m

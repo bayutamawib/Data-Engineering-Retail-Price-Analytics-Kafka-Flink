@@ -1,0 +1,6 @@
+FROM confluentinc/cp-kafka-connect:7.8.2
+
+USER root
+
+RUN yum update -y && \
+    yum install -y net-tools jq
